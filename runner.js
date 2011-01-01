@@ -6,10 +6,11 @@
 
 var sys = require('sys');
 
+// If you don't have a robust respawning infrastructure lile monit or daemontools,
 // install a default error handler for all execptions not caught otherwise
-process.on('uncaughtException', function (err) {
-  sys.puts('uncaught exception found: ' + err);
-});
+//process.on('uncaughtException', function (err) {
+//  sys.puts('uncaught exception found: ' + err);
+//});
 
 // then start the proxy itself
 var proxy = require('./lib/node-postgres-proxy');
