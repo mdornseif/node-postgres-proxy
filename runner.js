@@ -14,3 +14,5 @@ process.on('uncaughtException', function (err) {
 // then start the proxy itself
 var proxy = require('./lib/node-postgres-proxy');
 proxy.createProxy('./settings.json');
+
+console.log("Started node-postgres-proxy")
