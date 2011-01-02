@@ -145,7 +145,7 @@ vows.describe('helper functions').addBatch({
         return helpers.buildSqlInsert('persons', params);
       },
       'generates a query': function(topic) {
-        assert.equal(topic, "insert into persons (id, name) values ('2','Judith Hérault')");
+        assert.equal(topic, "INSERT INTO persons (id, name) VALUES (2,'Judith Hérault')");
       },
     },
 
@@ -187,7 +187,7 @@ vows.describe('helper functions').addBatch({
         return helpers.buildSqlUpdate('persons', params);
       },
       'generates a query': function(topic) {
-        assert.equal(topic, "update \"persons\" set name='Judith Hérault' where id='2'");
+        assert.equal(topic, "UPDATE \"persons\" SET name='Judith Hérault' WHERE id=2");
       },
     },
 
