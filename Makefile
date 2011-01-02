@@ -3,10 +3,13 @@ TEST_DATABASE = http://localhost:7070/sql/node
 TEST_JSON = http://localhost:7070/json/node
 CREDENTIALS = "top:secret"
 
-default: lib/helpers.js
+default: lib/helpers.js lib/node-postgres-proxy.js
 
 lib/helpers.js: lib/helpers.coffee
 	coffee -c lib/helpers.coffee
+
+lib/node-postgres-proxy.js: lib/node-postgres-proxy.coffee
+	coffee -c lib/node-postgres-proxy.coffee
 
 run:
 	node runner.js

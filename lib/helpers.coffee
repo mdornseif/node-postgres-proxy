@@ -1,3 +1,6 @@
+# some generic helper functions for the PostgreSQL proxy
+# (c) 2010, 2011 Axel Schlueter, Maximillian Dornseif for HUDORA
+
 sys = require("sys") 
 _ = require(__dirname + "/../lib/underscore/underscore.js")
 
@@ -37,6 +40,7 @@ exports.parseJSON = (data) ->
     try 
         return JSON.parse(data)
     catch error
+        console.log(error)
         return undefined
 
 
@@ -65,7 +69,7 @@ exports.buildSqlUpdate = (table, data)->
 
 # build a SQL count(*) statement for the given table and conditions
 exports.execSqlCount = (client, table, query, callback) ->
-  conditions  _.map(query.conditions, field_value_mapper).join(' AND ')
+  conditions = _.map(query.conditions, field_value_mapper).join(' AND ')
   query = "SELECT COUNT(*) FROM " + table + " WHERE " + conditions
   client.query(query, (err, rs) ->
     rowCnt = 0
