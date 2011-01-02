@@ -32,16 +32,18 @@ Querying a database
   
 * each configured database is available under its own endpoint URL, i.e. the database
   `foobar` will be accessible under `http://localhost:7070/[action]/foobar`. The `action`
-  part of the path can either be `sql` or `json`, depending on the query format.
-* to execute a `sql` action query send SQL command via a POST request to the proxy:
-  <code><pre>
-  curl -u "top:secret" -X POST --data "select * from persons" http://localhost:7070/sql/node
-  { 'success': true,
-    'rows': [ { 'id': 1, 'name': 'Pierre Niemans' },
-              { 'id': 2, 'name': 'Max Kerkerian' },
-              { 'id': 3, 'name': 'Fanny Ferreira' }
-            ]}
-  </pre></code>
+  part of the path can either be `sql` or `upsert`, depending on the query format.
+* to execute a `sql` action query send SQL command via a GET request to the proxy:
+        curl -u "top:secret" -G -data-urlencode "sql=SELECT COUNT(*) FROM persons" \
+            http://localhost:7070/sql/node
+        { 'success': true,
+          'rows': [ { 'id': 1, 'name': 'Pierre Niemans' },
+                    { 'id': 2, 'name': 'Max Kerkerian' },
+                    { 'id': 3, 'name': 'Fanny Ferreira' }
+                  ]}
+* if you want non-idempotent semantics use POST with `text/pain` content:
+    curl -u "top:secret" --data SELECT COUNT(*) FROM persons \
+        --header "Content-Type: text-plain" http://localhost:7070/sql/node
 * you can also send a JSON formatted query to the `json` action. The JSON format supports
   multiple queries in a single request. Each JSON request is a combined insert/update SQL
   request (something like http://en.wikipedia.org/wiki/Upsert). The proxy will check if a
