@@ -34,7 +34,7 @@ exports.sendError = (resp, error, status)->
   return false
 
 
-#try to parse the given data as a JSON object, then return it
+# try to parse the given data as a JSON object, then return it
 # as a Javascript object. If the input is invalid, `undefined` will returned.
 exports.parseJSON = (data) ->
     try 
@@ -79,6 +79,7 @@ exports.execSqlCount = (client, table, query, callback) ->
   )
 
 
+# JS wert in SQL repruasentation wandeln
 SQLstringify = (value) ->
   switch typeof value
     when 'string' then return "'" + value.replace("'", "''") + "'"
@@ -88,5 +89,6 @@ SQLstringify = (value) ->
       return String(value);
 
 
+# WHERE Klausel bauen
 field_value_mapper = (value, field) ->
   return field + "=" + SQLstringify(value)

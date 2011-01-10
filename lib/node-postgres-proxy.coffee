@@ -12,7 +12,16 @@ h = require(__dirname + '/../lib/helpers.js')
 _ = require(__dirname + '/../lib/underscore/underscore.js')
 
 pg = require(__dirname + '/../lib/node-postgres/lib')
-pg.defaults.poolSize = 10;
+pg.defaults.poolSize = 10
+
+query_counter = 0
+query_error_counter = 0
+upsert_counter = 0
+upsert_row_counter = 0
+upsert_error_counter = 0
+update_counter = 0
+insert_counter = 0
+
 
 # create and return a new proxy instance
 exports.createProxy = (configFilenameOrConfiguration, callback) ->
@@ -40,20 +49,32 @@ ProxyServer.prototype.startServer = (callback) ->
 
     server = http.createServer((req, resp) ->
         credentials = inst.config.users || {}
-        if inst.hasValidCredentials(req, resp)
-            parts = url.parse(req.url).pathname.split('/').splice(1)
-            action = parts[0]
-            dbName = parts[1]
-            if action == undefined || dbName == undefined
-                h.sendError(resp, "invalid action or database '" + action + "'/'" + dbName + "'", 404)
-            else 
-                switch req.method
-                  when 'GET'
-                    inst.handleGET(req, resp, action, dbName)
-                  when 'POST'
-                    inst.handlePOST(req, resp, action, dbName);
-                  else
-                    h.sendError(resp, 'Method Not Allowed: ' + sys.inspect(req.method), 405)
+        if url.parse(req.url).pathname == '/stats'
+            stats = 
+               'query_counter':        query_counter
+               'query_error_counter':  query_error_counter
+               'upsert_counter':       upsert_counter
+               'upsert_row_counter':   upsert_row_counter
+               'upsert_error_counter': upsert_error_counter
+               'update_counter':       update_counter
+               'insert_counter':       insert_counter
+            resp.writeHead(200, {'Content-Type': 'application/json'})
+            resp.end(JSON.stringify(stats))
+        else
+            if inst.hasValidCredentials(req, resp)
+                parts = url.parse(req.url).pathname.split('/').splice(1)
+                action = parts[0]
+                dbName = parts[1]
+                if action == undefined || dbName == undefined
+                    h.sendError(resp, "invalid action or database '" + action + "'/'" + dbName + "'", 404)
+                else 
+                    switch req.method
+                      when 'GET'
+                        inst.handleGET(req, resp, action, dbName)
+                      when 'POST'
+                        inst.handlePOST(req, resp, action, dbName);
+                      else
+                        h.sendError(resp, 'Method Not Allowed: ' + sys.inspect(req.method), 405)
     )
 
     server.listen(port, host)
@@ -140,21 +161,27 @@ ProxyServer.prototype.handlePOST = (req, resp, action, dbName) ->
 
 # called to handle UPSERT
 ProxyServer.prototype.handleJSONquery = (self, client, resp, clientData) ->
+    upsert_counter = upsert_counter + 1
     query = h.parseJSON(clientData)
     if !query || !query.table || !query.data
         h.sendError(resp, 'invalid query JSON found: ' + clientData, 400);
     else
         for row in query.data
+            upsert_row_counter = upsert_row_counter + 1
             h.execSqlCount(client, query.table, row, (err, rowCnt) ->
                 if err
+                    upsert_error_counter = upsert_error_counter + 1
                     h.sendError(resp, 'Database Error: ', 500);
                 else
-                  if rowCnt > 0 
+                  if rowCnt > 0
+                      update_counter =  update_counter + 1
                       sql = h.buildSqlUpdate(query.table, row);
                   else
+                      insert_counter = insert_counter + 1
                       sql = h.buildSqlInsert(query.table, row);
                   res = client.query(sql, (err, rs) ->
                         if err
+                            upsert_error_counter = upsert_error_counter + 1
                             client.query('rollback')
                             h.sendError(resp, 'Database Error: ' + err.message + ' - SQL: ' + sql, 500)
                         else
@@ -167,8 +194,10 @@ ProxyServer.prototype.handleJSONquery = (self, client, resp, clientData) ->
 
 # called to handle a single query
 ProxyServer.prototype.handleSQLquery = (self, client, resp, query) ->
+    query_counter = query_counter + 1
     client.query(query, (err, rs) ->
         if err
+            query_error_counter = query_error_counter + 1
             client.query('rollback')
             h.sendError(resp, err.message + ' - SQL: ' + query, 500)
         else
