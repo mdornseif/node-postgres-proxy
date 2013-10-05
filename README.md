@@ -96,3 +96,7 @@ have to install vows:
       $ curl http://npmjs.org/install.sh | sh
       $ npm install vows
       $ make tests
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/mdornseif/node-postgres-proxy/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
